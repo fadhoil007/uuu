@@ -33,9 +33,12 @@ function generatePassword() {
     correctLevel: QRCode.CorrectLevel.H
   });
 
-  const observer = new MutationObserver(() => {
+  // Polling QR img until it's ready
+  let waitTime = 0;
+  const interval = setInterval(() => {
     const qrImg = visibleQR.querySelector("img");
-    if (qrImg && qrImg.src) {
+    if (qrImg && qrImg.complete && qrImg.src && qrImg.naturalWidth !== 0) {
+      clearInterval(interval);
       const img = new Image();
       img.onload = function () {
         const qrSize = 2200;
@@ -57,14 +60,13 @@ function generatePassword() {
 
         document.getElementById("copyBtn").style.display = "inline-block";
         document.getElementById("downloadBtn").style.display = "inline-block";
-
-        observer.disconnect();
       };
       img.src = qrImg.src;
     }
-  });
 
-  observer.observe(visibleQR, { childList: true, subtree: true });
+    waitTime += 200;
+    if (waitTime > 3000) clearInterval(interval); // stop polling after 3s
+  }, 200);
 }
 
 function copyPassword() {
