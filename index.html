@@ -33,13 +33,31 @@
       <div class="quote" id="affirmation">Afirmasi harian...</div>
 
       <canvas id="qrcodeCanvas"></canvas>
+
+      <!-- QR code tetap dirender di DOM tapi tidak terlihat -->
       <div id="visibleQR" style="position:absolute; left:-9999px; top:-9999px;"></div>
-      
+
       <button id="downloadBtn" onclick="downloadQRCode()" style="display: none;">Unduh QR Code</button>
     </div>
   </div>
 
   <script src="assets/js/qrcode.min.js"></script>
   <script src="assets/js/app.js"></script>
+
+  <!-- Script untuk tanggal Indonesia -->
+  <script>
+    window.onload = () => {
+      const now = new Date();
+      const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+      const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni",
+                      "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+      const hari = days[now.getDay()];
+      const tanggal = now.getDate();
+      const bulan = months[now.getMonth()];
+      const tahun = now.getFullYear();
+
+      document.getElementById("tanggalLengkap").textContent = `${hari}, ${tanggal} ${bulan} ${tahun}`;
+    };
+  </script>
 </body>
 </html>
