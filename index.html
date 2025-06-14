@@ -34,8 +34,8 @@
 
       <canvas id="qrcodeCanvas"></canvas>
 
-      <!-- Gunakan posisi hidden yang tidak mengganggu render -->
-      <div id="visibleQR" style="visibility:hidden; height:1px; overflow:hidden;"></div>
+      <!-- Penting: Jangan gunakan display:none -->
+      <div id="visibleQR" style="opacity:0; pointer-events:none; position:absolute;"></div>
 
       <button id="downloadBtn" onclick="downloadQRCode()" style="display: none;">Unduh QR Code</button>
     </div>
@@ -44,7 +44,6 @@
   <script src="assets/js/qrcode.min.js"></script>
   <script src="assets/js/app.js"></script>
 
-  <!-- Script tanggal -->
   <script>
     window.onload = () => {
       const now = new Date();
@@ -55,7 +54,6 @@
       const tanggal = now.getDate();
       const bulan = months[now.getMonth()];
       const tahun = now.getFullYear();
-
       document.getElementById("tanggalLengkap").textContent = `${hari}, ${tanggal} ${bulan} ${tahun}`;
     };
   </script>
