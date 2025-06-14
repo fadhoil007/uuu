@@ -33,12 +33,13 @@ function generatePassword() {
     correctLevel: QRCode.CorrectLevel.H
   });
 
-  // Polling QR img until it's ready
+  // Gunakan polling untuk menunggu img QR benar-benar tersedia
   let waitTime = 0;
   const interval = setInterval(() => {
     const qrImg = visibleQR.querySelector("img");
-    if (qrImg && qrImg.complete && qrImg.src && qrImg.naturalWidth !== 0) {
+    if (qrImg && qrImg.complete && qrImg.naturalWidth > 0) {
       clearInterval(interval);
+
       const img = new Image();
       img.onload = function () {
         const qrSize = 2200;
@@ -65,7 +66,7 @@ function generatePassword() {
     }
 
     waitTime += 200;
-    if (waitTime > 3000) clearInterval(interval); // stop polling after 3s
+    if (waitTime > 3000) clearInterval(interval);
   }, 200);
 }
 
