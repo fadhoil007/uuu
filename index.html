@@ -34,8 +34,8 @@
 
       <canvas id="qrcodeCanvas"></canvas>
 
-      <!-- QR code tetap dirender di DOM tapi tidak terlihat -->
-      <div id="visibleQR" style="position:absolute; left:-9999px; top:-9999px;"></div>
+      <!-- Gunakan posisi hidden yang tidak mengganggu render -->
+      <div id="visibleQR" style="visibility:hidden; height:1px; overflow:hidden;"></div>
 
       <button id="downloadBtn" onclick="downloadQRCode()" style="display: none;">Unduh QR Code</button>
     </div>
@@ -44,7 +44,7 @@
   <script src="assets/js/qrcode.min.js"></script>
   <script src="assets/js/app.js"></script>
 
-  <!-- Script untuk tanggal Indonesia -->
+  <!-- Script tanggal -->
   <script>
     window.onload = () => {
       const now = new Date();
