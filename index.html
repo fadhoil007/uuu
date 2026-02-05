@@ -1,66 +1,554 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SRC RIZQI - Password Generator</title>
-  <link rel="stylesheet" href="assets/style.css" />
-  <link rel="icon" href="assets/favicon.png" type="image/png" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SRC RIZQI - GENERATOR PASSWORD WIFI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center; 
+            justify-content: center; 
+            overflow-x: hidden;
+            margin: 0;
+            padding: 1rem;
+        }
+
+        .glass-morphism {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            width: 100%;
+            max-width: 28rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center; 
+        }
+
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.9) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .qr-card-anim {
+            animation: fadeInScale 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .password-placeholder {
+            color: #9ca3af !important;
+            font-style: italic;
+            font-size: clamp(0.75rem, 3vw, 0.95rem) !important;
+        }
+
+        .password-active {
+            color: #000000 !important;
+            font-style: normal;
+            font-weight: 600;
+            font-size: clamp(1rem, 4vw, 1.25rem) !important;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal.active { display: flex; }
+
+        #instructionNote {
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.5s ease;
+            opacity: 0;
+        }
+
+        #instructionNote.show {
+            max-height: 120px;
+            opacity: 1;
+            margin-top: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .fade-text { transition: opacity 0.8s ease-in-out; white-space: nowrap; }
+        .fade-out { opacity: 0; }
+        .fade-in { opacity: 1; }
+
+        #historySection {
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #historySection.show {
+            max-height: 200px;
+            opacity: 1;
+            transform: translateY(0);
+            margin-top: 1.25rem;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            height: 18px; width: 18px; border-radius: 50%;
+            background: #4f46e5; cursor: pointer; -webkit-appearance: none;
+            margin-top: -8px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: transform 0.2s ease;
+        }
+
+        /* FAB Styles */
+        .fab {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 3.5rem;
+            height: 3.5rem;
+            background: #ffffff;
+            color: #4f46e5;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            z-index: 90;
+            transition: all 0.3s ease;
+            border: 2px solid #4f46e5;
+        }
+
+        .fab:hover {
+            transform: scale(1.1) rotate(15deg);
+            box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.4);
+        }
+
+        @media (max-width: 640px) {
+            .fab { bottom: 1.5rem; right: 1.5rem; width: 3rem; height: 3rem; }
+        }
+
+        @media (max-height: 700px) {
+            body { justify-content: flex-start; padding-top: 2rem; }
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <div class="overlay">
-      <div class="tanggal-lengkap" id="tanggalLengkap">Tanggal</div>
-      <h2>HASILKAN PASSWORD WIFI</h2>
-      <h1>SRC RIZQI</h1>
 
-      <div id="password">*********</div>
+    <div class="glass-morphism rounded-3xl shadow-2xl p-6 sm:p-8 relative">
+        <h1 class="text-xl sm:text-2xl font-bold text-gray-800 mb-2 text-center leading-tight tracking-tight">
+            SRC RIZQI <br> Password Wifi Generator
+        </h1>
+        
+        <div id="dateTimeDisplay" class="text-center font-medium text-gray-500 text-[10px] sm:text-xs mb-3 w-full">
+            Memuat waktu...
+        </div>
 
-      <div class="char-setting">
-        <label for="charLength">Jumlah karakter: <span id="charValue">9</span></label>
-        <input type="range" id="charLength" min="8" max="15" value="9" />
-      </div>
+        <div class="h-10 flex items-center justify-center overflow-hidden mb-5 bg-indigo-50 py-1 px-4 rounded-full w-full">
+            <p id="quoteDisplay" class="text-indigo-600 text-center text-[10px] sm:text-[13px] font-bold fade-text fade-in tracking-tight">
+                Memuat inspirasi...
+            </p>
+        </div>
 
-      <div class="buttons">
-        <button class="generate" onclick="generatePassword()">
-          <i id="genIcon">🔁</i> Generate
-        </button>
-        <button class="copy" id="copyBtn" onclick="copyPassword()" style="display: none;">
-          <i id="copyIcon">📋</i> Copy
-        </button>
-      </div>
+        <div class="content-wrapper">
+            <div class="relative mb-4">
+                <input type="text" id="passwordDisplay" readonly 
+                    class="w-full bg-gray-100 py-4 pl-4 pr-14 rounded-2xl border-2 border-transparent focus:border-indigo-500 outline-none transition-all font-mono password-placeholder shadow-inner text-center"
+                    value="PASSWORD BELUM DIGENERATED">
+                
+                <div class="absolute right-2 top-1/2 -translate-y-1/2">
+                    <button onclick="showQRCode(passwordDisplay.value)" 
+                        class="bg-indigo-600 hover:bg-indigo-700 text-white p-2.5 rounded-xl shadow-md transition-all active:scale-95">
+                        <i class="fa-solid fa-qrcode text-lg"></i>
+                    </button>
+                </div>
+            </div>
 
-      <div class="quote" id="affirmation">Afirmasi harian...</div>
+            <div id="instructionNote" class="text-center bg-yellow-50 border border-yellow-200 rounded-xl p-3">
+                <p class="text-[10px] sm:text-xs text-yellow-700 leading-tight">
+                    <i class="fa-solid fa-circle-info mr-1"></i>
+                    Karakter dibagi rata sesuai opsi yang dipilih.
+                </p>
+            </div>
 
-      <canvas id="qrcodeCanvas"></canvas>
+            <div class="mb-6 mt-4">
+                <div class="flex justify-between mb-1">
+                    <span class="text-[10px] sm:text-xs font-semibold text-gray-500 tracking-wider">Kekuatan</span>
+                    <span id="strengthText" class="text- sm:text-xs font-semibold">Menunggu...</span>
+                </div>
+                <div class="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
+                    <div id="strengthBar" class="h-full w-0 transition-all duration-500 bg-gray-300"></div>
+                </div>
+            </div>
 
-      <!-- Penting: Jangan gunakan display:none -->
-      <div id="visibleQR" style="opacity:0; pointer-events:none; position:absolute;"></div>
+            <div class="space-y-4">
+                <div>
+                    <div class="flex justify-between mb-1">
+                        <label class="text-xs sm:text-sm font-semibold text-gray-500">Panjang Karakter</label>
+                        <span id="lengthValue" class="text-xs sm:text-sm font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">9</span>
+                    </div>
+                    <input type="range" id="lengthSlider" min="8" max="13" value="9" 
+                        class="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600">
+                </div>
 
-      <button id="downloadBtn" onclick="downloadQRCode()" style="display: none;">Unduh QR Code</button>
+                <div class="grid grid-cols-2 gap-2 sm:gap-3">
+                    <label class="flex items-center space-x-2 cursor-pointer group bg-gray-50 p-2 rounded-lg border border-gray-100">
+                        <input type="checkbox" id="includeUppercase" checked class="w-3.5 h-3.5 rounded border-gray-300 text-indigo-600">
+                        <span class="text-[10px] sm:text-xs text-gray-600 font-bold uppercase">Huruf Besar</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer group bg-gray-50 p-2 rounded-lg border border-gray-100">
+                        <input type="checkbox" id="includeLowercase" checked class="w-3.5 h-3.5 rounded border-gray-300 text-indigo-600">
+                        <span class="text-[10px] sm:text-xs text-gray-600 font-bold uppercase">Huruf Kecil</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer group bg-gray-50 p-2 rounded-lg border border-gray-100">
+                        <input type="checkbox" id="includeNumbers" checked class="w-3.5 h-3.5 rounded border-gray-300 text-indigo-600">
+                        <span class="text-[10px] sm:text-xs text-gray-600 font-bold uppercase">Angka</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer group bg-gray-50 p-2 rounded-lg border border-gray-100">
+                        <input type="checkbox" id="includeSymbols" class="w-3.5 h-3.5 rounded border-gray-300 text-indigo-600">
+                        <span class="text-[10px] sm:text-xs text-gray-600 font-bold uppercase">Simbol</span>
+                    </label>
+                </div>
+            </div>
+
+            <button id="generateBtn" 
+                class="w-full mt-6 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-2xl shadow-lg transition-all active:scale-[0.97] flex items-center justify-center space-x-2 uppercase">
+                <i class="fa-solid fa-bolt"></i>
+                <span class="tracking-wide">Buat Password</span>
+            </button>
+        </div>
+
+        <div id="historySection" class="w-full">
+            <div class="flex items-center space-x-2 mb-2">
+                <div class="h-[1px] flex-1 bg-gray-200"></div>
+                <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Riwayat Terakhir</span>
+                <div class="h-[1px] flex-1 bg-gray-200"></div>
+            </div>
+            <div class="bg-gray-50 border border-gray-100 rounded-xl p-3 flex items-center justify-between">
+                <div class="overflow-hidden mr-2">
+                    <p id="historyText" class="font-mono text-gray-600 truncate text-xs sm:text-sm font-semibold text-center">---</p>
+                </div>
+                <button id="openHistoryQR" class="bg-white border border-gray-200 text-indigo-600 p-2 rounded-lg shadow-sm active:scale-95">
+                    <i class="fa-solid fa-qrcode"></i>
+                </button>
+            </div>
+        </div>
     </div>
-  </div>
 
-<!-- QR CODE LIBRARY (WAJIB DI ATAS app.js) -->
-<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+    <!-- FAB Button -->
+    <div class="fab" onclick="toggleTutorial()">
+        <i class="fa-solid fa-question text-xl"></i>
+    </div>
 
-<!-- APP SCRIPT -->
-<script src="assets/js/app.js"></script>
+    <!-- Modal QR Code -->
+    <div id="qrModal" class="modal">
+        <div id="qrCard" class="bg-white p-6 sm:p-8 rounded-3xl max-w-xs w-full text-center relative mx-4 shadow-2xl">
+            <button onclick="closeModal('qrModal')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 active:scale-90">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+            <h3 class="text-lg font-bold text-gray-800 mb-2 uppercase">Pindai WiFi</h3>
+            <p class="text-[11px] text-gray-500 leading-relaxed mb-6 font-medium">Hubungkan ke SRC RIZQI secara otomatis.</p>
+            <div id="qrcode" class="flex justify-center mb-6 p-3 bg-white border-2 border-indigo-50 rounded-2xl shadow-inner"></div>
+            
+            <div class="flex flex-col sm:flex-row gap-2">
+                <button id="modalCopyBtn" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 rounded-xl transition-all flex items-center justify-center space-x-2 active:scale-95 uppercase text-[10px]">
+                    <i class="fa-regular fa-copy"></i>
+                    <span>Salin</span>
+                </button>
+                <button id="modalDownloadBtn" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl transition-all flex items-center justify-center space-x-2 active:scale-95 uppercase text-[10px]">
+                    <i class="fa-solid fa-download"></i>
+                    <span>Unduh</span>
+                </button>
+            </div>
+        </div>
+    </div>
 
+    <!-- Modal Tutorial -->
+    <div id="tutorialModal" class="modal">
+        <div id="tutorialCard" class="bg-white p-6 sm:p-8 rounded-3xl max-w-sm w-full relative mx-4 shadow-2xl overflow-hidden">
+            <button onclick="closeModal('tutorialModal')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 active:scale-90">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+            
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <i class="fa-solid fa-lightbulb text-3xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800 uppercase tracking-tight">Cara Penggunaan</h3>
+                <p class="text-xs text-gray-500 font-medium">Ikuti langkah mudah berikut ini</p>
+            </div>
 
-  <script>
-    window.onload = () => {
-      const now = new Date();
-      const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
-      const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni",
-                      "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-      const hari = days[now.getDay()];
-      const tanggal = now.getDate();
-      const bulan = months[now.getMonth()];
-      const tahun = now.getFullYear();
-      document.getElementById("tanggalLengkap").textContent = `${hari}, ${tanggal} ${bulan} ${tahun}`;
-    };
-  </script>
+            <div class="space-y-4 text-left">
+                <div class="flex items-start space-x-4 p-3 bg-gray-50 rounded-2xl">
+                    <span class="bg-indigo-600 text-white w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">1</span>
+                    <p class="text-xs text-gray-600 leading-relaxed">Pilih <b>Panjang Karakter</b> dan tentukan kombinasi yang diinginkan (Huruf/Angka/Simbol).</p>
+                </div>
+                <div class="flex items-start space-x-4 p-3 bg-gray-50 rounded-2xl">
+                    <span class="bg-indigo-600 text-white w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">2</span>
+                    <p class="text-xs text-gray-600 leading-relaxed">Klik tombol <b>Buat Password</b> untuk menghasilkan kunci acak yang kuat.</p>
+                </div>
+                <div class="flex items-start space-x-4 p-3 bg-gray-50 rounded-2xl">
+                    <span class="bg-indigo-600 text-white w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">3</span>
+                    <p class="text-xs text-gray-600 leading-relaxed">Gunakan ikon <b>QR Code</b> untuk memindai akses WiFi atau <b>Unduh</b> sebagai gambar.</p>
+                </div>
+                <div class="flex items-start space-x-4 p-3 bg-indigo-50 border border-indigo-100 rounded-2xl">
+                    <span class="bg-indigo-600 text-white w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">4</span>
+                    <p class="text-xs text-indigo-700 leading-relaxed italic">Password sebelumnya akan tersimpan di bagian <b>Riwayat Terakhir</b> secara otomatis.</p>
+                </div>
+            </div>
+
+            <button onclick="closeModal('tutorialModal')" class="w-full mt-6 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-2xl shadow-lg transition-all active:scale-95 uppercase text-xs">
+                Mengerti
+            </button>
+        </div>
+    </div>
+
+    <footer class="mt-6 mb-4 text-white/80 text-[10px] sm:text-xs font-medium tracking-wide flex items-center gap-1.5 opacity-90 justify-center uppercase">
+        made with <i class="fa-solid fa-heart text-pink-400 animate-pulse"></i> by rizqi
+    </footer>
+
+    <p id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-8 py-3 rounded-2xl text-[10px] font-bold shadow-2xl opacity-0 transition-opacity duration-300 pointer-events-none z-50">
+        Berhasil disalin!
+    </p>
+
+    <script>
+        const passwordDisplay = document.getElementById('passwordDisplay');
+        const lengthSlider = document.getElementById('lengthSlider');
+        const lengthValue = document.getElementById('lengthValue');
+        const includeUppercase = document.getElementById('includeUppercase');
+        const includeLowercase = document.getElementById('includeLowercase');
+        const includeNumbers = document.getElementById('includeNumbers');
+        const includeSymbols = document.getElementById('includeSymbols');
+        const generateBtn = document.getElementById('generateBtn');
+        const strengthBar = document.getElementById('strengthBar');
+        const strengthText = document.getElementById('strengthText');
+        const toast = document.getElementById('toast');
+        const dateTimeDisplay = document.getElementById('dateTimeDisplay');
+        const qrModal = document.getElementById('qrModal');
+        const tutorialModal = document.getElementById('tutorialModal');
+        const qrCard = document.getElementById('qrCard');
+        const tutorialCard = document.getElementById('tutorialCard');
+        const qrcodeContainer = document.getElementById('qrcode');
+        const instructionNote = document.getElementById('instructionNote');
+        const quoteDisplay = document.getElementById('quoteDisplay');
+        const historySection = document.getElementById('historySection');
+        const historyText = document.getElementById('historyText');
+        const openHistoryQR = document.getElementById('openHistoryQR');
+        const modalCopyBtn = document.getElementById('modalCopyBtn');
+        const modalDownloadBtn = document.getElementById('modalDownloadBtn');
+
+        const charSets = {
+            uppercase: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+            lowercase: 'abcdefghijklmnopqrstuvwxyz',
+            numbers: '0123456789',
+            symbols: '!@#$%^&*()_+-=[]{}|;:,.<>?'
+        };
+
+        const quotes = ["Mimpi besar butuh kerja keras.", "Pastikan hari ini lebih baik.", "Wujudkan masa depan dengan aksi.", "Keberhasilan butuh doa dan usaha.", "Jangan pernah menyerah pada keadaan."];
+        let quoteIndex = 0;
+        let hasGenerated = false;
+        let previousPassword = "";
+
+        function cycleQuotes() {
+            quoteDisplay.classList.add('fade-out');
+            setTimeout(() => {
+                quoteIndex = (quoteIndex + 1) % quotes.length;
+                quoteDisplay.textContent = quotes[quoteIndex];
+                quoteDisplay.classList.replace('fade-out', 'fade-in');
+            }, 800);
+        }
+
+        function updateDateTime() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/:/g, '.');
+            dateTimeDisplay.textContent = `${now.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} | ${timeStr}`;
+        }
+
+        setInterval(cycleQuotes, 4000);
+        setInterval(updateDateTime, 1000);
+        updateDateTime();
+
+        lengthSlider.addEventListener('input', () => lengthValue.textContent = lengthSlider.value);
+
+        function generatePassword() {
+            if (hasGenerated && passwordDisplay.value !== "PASSWORD BELUM DIGENERATED") {
+                previousPassword = passwordDisplay.value;
+                historyText.textContent = previousPassword;
+                historySection.classList.add('show');
+                openHistoryQR.onclick = () => showQRCode(previousPassword);
+            }
+
+            const totalLength = parseInt(lengthSlider.value);
+            const selectedTypes = [];
+            if (includeUppercase.checked) selectedTypes.push('uppercase');
+            if (includeLowercase.checked) selectedTypes.push('lowercase');
+            if (includeNumbers.checked) selectedTypes.push('numbers');
+            if (includeSymbols.checked) selectedTypes.push('symbols');
+
+            if (selectedTypes.length === 0) {
+                showToast('Pilih setidaknya satu opsi!');
+                return;
+            }
+
+            const countPerType = Math.floor(totalLength / selectedTypes.length);
+            const remainder = totalLength % selectedTypes.length;
+            let passwordChars = [];
+
+            selectedTypes.forEach((type, index) => {
+                const currentTypeCount = index === 0 ? countPerType + remainder : countPerType;
+                const set = charSets[type];
+                
+                for (let i = 0; i < currentTypeCount; i++) {
+                    const cryptoArray = new Uint32Array(1);
+                    window.crypto.getRandomValues(cryptoArray);
+                    passwordChars.push(set[cryptoArray[0] % set.length]);
+                }
+            });
+
+            for (let i = passwordChars.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [passwordChars[i], passwordChars[j]] = [passwordChars[j], passwordChars[i]];
+            }
+
+            const finalPassword = passwordChars.join('');
+            passwordDisplay.value = finalPassword;
+            passwordDisplay.className = "w-full bg-gray-100 py-4 pl-4 pr-14 rounded-2xl border-2 border-transparent focus:border-indigo-500 outline-none transition-all font-mono shadow-inner text-center password-active";
+            instructionNote.classList.add('show');
+            hasGenerated = true;
+            updateStrength(finalPassword);
+        }
+
+        function updateStrength(p) {
+            let score = 0;
+            if (p.length >= 8) score++;
+            if (p.length > 11) score++;
+            if (/[A-Z]/.test(p)) score++;
+            if (/[0-9]/.test(p)) score++;
+            if (/[^A-Za-z0-9]/.test(p)) score++;
+
+            let color = '#ef4444', width = '20%', label = 'Lemah';
+            if (score >= 5) { color = '#22c55e'; width = '100%'; label = 'Sangat Kuat'; }
+            else if (score >= 4) { color = '#84cc16'; width = '75%'; label = 'Kuat'; }
+            else if (score >= 3) { color = '#eab308'; width = '50%'; label = 'Sedang'; }
+
+            strengthBar.style.width = width;
+            strengthBar.style.backgroundColor = color;
+            strengthText.textContent = label;
+            strengthText.style.color = color;
+        }
+
+        function copyToClipboard(text) {
+            const el = document.createElement('textarea');
+            el.value = text;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            showToast('Berhasil disalin!');
+        }
+
+        function showQRCode(p) {
+            if (p === "PASSWORD BELUM DIGENERATED") return;
+            qrcodeContainer.innerHTML = '';
+            new QRCode(qrcodeContainer, {
+                text: `WIFI:T:WPA;S:SRC RIZQI;P:${p};;`,
+                width: 200, height: 200,
+                colorDark: "#000000", colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+            modalCopyBtn.onclick = () => copyToClipboard(p);
+            modalDownloadBtn.onclick = () => downloadQR(p);
+            
+            qrCard.classList.remove('qr-card-anim');
+            void qrCard.offsetWidth; 
+            qrCard.classList.add('qr-card-anim');
+            
+            qrModal.classList.add('active');
+        }
+
+        function toggleTutorial() {
+            tutorialCard.classList.remove('qr-card-anim');
+            void tutorialCard.offsetWidth; 
+            tutorialCard.classList.add('qr-card-anim');
+            tutorialModal.classList.add('active');
+        }
+
+        function downloadQR(p) {
+            const qrCanvas = qrcodeContainer.querySelector('canvas');
+            if (!qrCanvas) return;
+
+            const finalCanvas = document.createElement('canvas');
+            const qrSize = 800; 
+            const margin = 120; 
+            finalCanvas.width = qrSize + (margin * 2); 
+            finalCanvas.height = qrSize + 480; 
+
+            const ctx = finalCanvas.getContext('2d');
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
+            ctx.fillStyle = '#000000';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            let fontSize = 120;
+            ctx.font = `bold ${fontSize}px 'Poppins', sans-serif`;
+            while(ctx.measureText(p).width > qrSize && fontSize > 40) {
+                fontSize -= 2;
+                ctx.font = `bold ${fontSize}px 'Poppins', sans-serif`;
+            }
+
+            ctx.fillText(p, finalCanvas.width / 2, 180);
+            ctx.strokeStyle = '#f3f4f6';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(margin, 280);
+            ctx.lineTo(finalCanvas.width - margin, 280);
+            ctx.stroke();
+            ctx.drawImage(qrCanvas, margin, 340, qrSize, qrSize);
+            ctx.fillStyle = '#4f46e5';
+            ctx.font = 'bold 50px Poppins, sans-serif';
+            ctx.fillText('WiFi: SRC RIZQI', finalCanvas.width / 2, finalCanvas.height - 80);
+
+            const link = document.createElement('a');
+            link.href = finalCanvas.toDataURL("image/png", 1.0);
+            link.download = `QR_WIFI_SRCRIZQI_${p}.png`;
+            link.click();
+        }
+
+        function closeModal(modalId) { 
+            document.getElementById(modalId).classList.remove('active'); 
+        }
+
+        function showToast(m) {
+            toast.textContent = m;
+            toast.style.opacity = '1';
+            setTimeout(() => toast.style.opacity = '0', 2000);
+        }
+
+        window.onclick = (e) => { 
+            if (e.target.classList.contains('modal')) {
+                e.target.classList.remove('active');
+            }
+        }
+        generateBtn.addEventListener('click', generatePassword);
+    </script>
 </body>
 </html>
-
