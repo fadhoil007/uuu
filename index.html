@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SRC RIZQI - GENERATOR PASSWORD WIFI</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Menggunakan versi spesifik QRCode.js yang lebih stabil -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -131,10 +132,18 @@
             border: 2px solid #4f46e5;
         }
 
-        #hiddenQRContainer {
-            position: absolute;
-            left: -9999px;
-            top: -9999px;
+        /* Container QR harus memiliki ukuran pasti untuk membantu QRCode.js */
+        #qrcode {
+            min-width: 200px;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #qrcode canvas, #qrcode img {
+            max-width: 100%;
+            height: auto;
         }
     </style>
 </head>
@@ -238,7 +247,6 @@
         </div>
     </div>
 
-    <!-- Floating Action Button for Help -->
     <div class="fab" onclick="toggleTutorial()">
         <i class="fa-solid fa-question text-xl"></i>
     </div>
@@ -251,7 +259,9 @@
             </button>
             <h3 class="text-base font-bold text-gray-800 mb-1 uppercase tracking-tight">Scan WiFi</h3>
             <p class="text-[10px] text-gray-400 mb-5 font-bold uppercase tracking-widest">Hubungkan ke SRC RIZQI</p>
-            <div id="qrcode" class="flex justify-center mb-6 p-2 bg-white rounded-2xl border-2 border-dashed border-indigo-50"></div>
+            
+            <!-- Tempat QR Code -->
+            <div id="qrcode" class="flex justify-center mb-6 p-2 bg-white rounded-2xl border-2 border-dashed border-indigo-50 mx-auto"></div>
             
             <div class="flex gap-2">
                 <button id="modalCopyBtn" class="flex-1 bg-gray-100 text-gray-700 font-bold py-3 rounded-xl text-xs uppercase active:scale-95 transition-colors">Salin</button>
@@ -260,7 +270,6 @@
         </div>
     </div>
 
-    <!-- Tutorial Modal -->
     <div id="tutorialModal" class="modal">
         <div id="tutorialCard" class="bg-white p-6 rounded-3xl max-w-[320px] w-full relative mx-4 shadow-2xl qr-card-anim">
             <button onclick="closeModal('tutorialModal')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 active:scale-90">
@@ -295,8 +304,6 @@
         </div>
     </div>
 
-    <div id="hiddenQRContainer"></div>
-
     <footer class="mt-4 mb-6 text-white/90 text-[10px] font-bold tracking-[0.2em] flex items-center gap-1 justify-center">
         made with <i class="fa-solid fa-heart text-pink-400 animate-pulse"></i> by rizqi
     </footer>
@@ -306,7 +313,6 @@
     </p>
 
     <script>
-        // Element Selectors
         const passwordDisplay = document.getElementById('passwordDisplay');
         const lengthSlider = document.getElementById('lengthSlider');
         const lengthValue = document.getElementById('lengthValue');
@@ -322,9 +328,7 @@
         const qrModal = document.getElementById('qrModal');
         const tutorialModal = document.getElementById('tutorialModal');
         const qrCard = document.getElementById('qrCard');
-        const tutorialCard = document.getElementById('tutorialCard');
         const qrcodeContainer = document.getElementById('qrcode');
-        const hiddenQRContainer = document.getElementById('hiddenQRContainer');
         const instructionNote = document.getElementById('instructionNote');
         const quoteDisplay = document.getElementById('quoteDisplay');
         const historySection = document.getElementById('historySection');
@@ -342,7 +346,7 @@
 
         const quotes = [
             "Mimpi besar butuh kerja keras.", 
-            "Pastikan hari ini lebih baik dari kemaren.", 
+            "Pastikan hari ini lebih baik dari hari kemaren.", 
             "Wujudkan masa depan dengan aksi.", 
             "Keberhasilan butuh doa.", 
             "Pantang menyerah adalah kunci."
@@ -352,7 +356,6 @@
         let hasGenerated = false;
         let previousPassword = "";
 
-        // UI Helpers
         function cycleQuotes() {
             quoteDisplay.classList.add('fade-out');
             setTimeout(() => {
@@ -374,7 +377,6 @@
 
         lengthSlider.addEventListener('input', () => lengthValue.textContent = lengthSlider.value);
 
-        // Core Logic: Password Generation
         function generatePassword() {
             if (hasGenerated && passwordDisplay.value !== "Klik Buat Password") {
                 previousPassword = passwordDisplay.value;
@@ -409,7 +411,6 @@
                 }
             });
 
-            // Shuffle array
             for (let i = passwordChars.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [passwordChars[i], passwordChars[j]] = [passwordChars[j], passwordChars[i]];
@@ -452,27 +453,44 @@
             showToast('Berhasil disalin!');
         }
 
-        // QR Code & Download Logic
+        /**
+         * PERBAIKAN UTAMA: Logika Generate QR yang lebih tangguh
+         */
         function showQRCode(p) {
             if (p === "Klik Buat Password") {
                 showToast('Klik Buat Password Terlebih Dahulu!');
                 return;
             }
+
+            // Bersihkan container sepenuhnya
             qrcodeContainer.innerHTML = '';
-            new QRCode(qrcodeContainer, {
-                text: `WIFI:T:WPA;S:SRC RIZQI;P:${p};;`,
-                width: 200, height: 200,
-                colorDark: "#000000", colorLight: "#ffffff",
-                correctLevel: QRCode.CorrectLevel.H
-            });
+            
+            // Tampilkan modal dulu agar elemen terlihat di DOM (QRCode.js butuh elemen terlihat)
+            qrModal.classList.add('active');
+
+            // Tambahkan sedikit delay untuk memastikan modal transisi selesai (Sangat penting di mobile)
+            setTimeout(() => {
+                try {
+                    new QRCode(qrcodeContainer, {
+                        text: `WIFI:T:WPA;S:SRC RIZQI;P:${p};;`,
+                        width: 200,
+                        height: 200,
+                        colorDark: "#000000",
+                        colorLight: "#ffffff",
+                        correctLevel: QRCode.CorrectLevel.H
+                    });
+                } catch (e) {
+                    console.error("QR Error:", e);
+                    showToast('Gagal memuat QR Code');
+                }
+            }, 100);
+
             modalCopyBtn.onclick = () => copyToClipboard(p);
             modalDownloadBtn.onclick = () => downloadHighResQR(p);
             
-            // Animation reset
             qrCard.classList.remove('qr-card-anim');
             void qrCard.offsetWidth; 
             qrCard.classList.add('qr-card-anim');
-            qrModal.classList.add('active');
         }
 
         function downloadHighResQR(p) {
@@ -485,13 +503,16 @@
             canvas.height = height;
             const ctx = canvas.getContext('2d');
 
-            // Draw Background
             ctx.fillStyle = "#ffffff";
             ctx.fillRect(0, 0, width, height);
 
+            // Create temporary hidden div for HQ QR
             const tempDiv = document.createElement('div');
-            // Menambahkan parameter 'useSVG: false' secara implisit lewat QRCode.js default
-            const qrcodeInstance = new QRCode(tempDiv, {
+            tempDiv.style.visibility = 'hidden';
+            tempDiv.style.position = 'absolute';
+            document.body.appendChild(tempDiv);
+
+            new QRCode(tempDiv, {
                 text: `WIFI:T:WPA;S:SRC RIZQI;P:${p};;`,
                 width: qrSize,
                 height: qrSize,
@@ -500,55 +521,45 @@
                 correctLevel: QRCode.CorrectLevel.H
             });
 
-            // Loop pengecekan apakah image/canvas sudah siap (Krusial untuk Mobile)
-            let checkCount = 0;
-            const checkReady = setInterval(() => {
+            // Tunggu render QR selesai
+            let attempts = 0;
+            const checkInterval = setInterval(() => {
+                const qrCanvas = tempDiv.querySelector('canvas');
                 const qrImg = tempDiv.querySelector('img');
-                const qrCanv = tempDiv.querySelector('canvas');
                 
-                // Pastikan gambar sudah memiliki source (base64)
-                if ((qrImg && qrImg.src && qrImg.src.length > 100) || qrCanv) {
-                    clearInterval(checkReady);
+                if (qrCanvas || (qrImg && qrImg.src && qrImg.src.length > 100)) {
+                    clearInterval(checkInterval);
                     
-                    const source = qrImg || qrCanv;
+                    const source = (qrImg && qrImg.src && qrImg.src.length > 100) ? qrImg : qrCanvas;
                     
                     ctx.fillStyle = "#000000";
                     ctx.textAlign = "center";
                     
-                    // Header
                     ctx.font = "bold 45px Poppins, sans-serif";
                     ctx.fillText("PASSWORD WIFI", width/2, 120);
                     
-                    // Password Text (Bold 800)
                     ctx.font = "800 110px Poppins, sans-serif";
                     ctx.fillText(p, width/2, 230);
 
-                    // Draw QR Image
                     const xPos = (width - qrSize) / 2;
                     ctx.drawImage(source, xPos, 380, qrSize, qrSize);
 
-                    // Download Trigger
-                    try {
-                        const link = document.createElement('a');
-                        link.href = canvas.toDataURL("image/png", 1.0);
-                        link.download = `WIFI_ACCESS_RIZQI_${p}.png`;
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
-                    } catch (err) {
-                        showToast('Gagal mengunduh, coba lagi.');
-                    }
+                    const link = document.createElement('a');
+                    link.href = canvas.toDataURL("image/png", 1.0);
+                    link.download = `WIFI_RIZQI_${p}.png`;
+                    link.click();
+                    
+                    document.body.removeChild(tempDiv);
                 }
                 
-                checkCount++;
-                if (checkCount > 20) { // Timeout setelah 2 detik
-                    clearInterval(checkReady);
-                    showToast('Gagal memproses QR Code.');
+                if (++attempts > 30) {
+                    clearInterval(checkInterval);
+                    document.body.removeChild(tempDiv);
+                    showToast('Gagal memproses gambar');
                 }
             }, 100);
         }
 
-        // UI Navigation
         function toggleTutorial() {
             tutorialCard.classList.remove('qr-card-anim');
             void tutorialCard.offsetWidth; 
@@ -564,7 +575,6 @@
             setTimeout(() => toast.style.opacity = '0', 2500);
         }
 
-        // Global Event Listeners
         window.onclick = (e) => { if (e.target.classList.contains('modal')) e.target.classList.remove('active'); }
         generateBtn.addEventListener('click', generatePassword);
     </script>
