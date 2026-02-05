@@ -490,7 +490,8 @@
             ctx.fillRect(0, 0, width, height);
 
             const tempDiv = document.createElement('div');
-            new QRCode(tempDiv, {
+            // Menambahkan parameter 'useSVG: false' secara implisit lewat QRCode.js default
+            const qrcodeInstance = new QRCode(tempDiv, {
                 text: `WIFI:T:WPA;S:SRC RIZQI;P:${p};;`,
                 width: qrSize,
                 height: qrSize,
@@ -499,30 +500,52 @@
                 correctLevel: QRCode.CorrectLevel.H
             });
 
-            setTimeout(() => {
-                const qrImg = tempDiv.querySelector('img') || tempDiv.querySelector('canvas');
+            // Loop pengecekan apakah image/canvas sudah siap (Krusial untuk Mobile)
+            let checkCount = 0;
+            const checkReady = setInterval(() => {
+                const qrImg = tempDiv.querySelector('img');
+                const qrCanv = tempDiv.querySelector('canvas');
                 
-                ctx.fillStyle = "#000000";
-                ctx.textAlign = "center";
-                
-                // Header
-                ctx.font = "bold 45px Poppins, sans-serif";
-                ctx.fillText("PASSWORD WIFI", width/2, 120);
-                
-                // Password Text (Bold 800)
-                ctx.font = "800 110px Poppins, sans-serif";
-                ctx.fillText(p, width/2, 230);
+                // Pastikan gambar sudah memiliki source (base64)
+                if ((qrImg && qrImg.src && qrImg.src.length > 100) || qrCanv) {
+                    clearInterval(checkReady);
+                    
+                    const source = qrImg || qrCanv;
+                    
+                    ctx.fillStyle = "#000000";
+                    ctx.textAlign = "center";
+                    
+                    // Header
+                    ctx.font = "bold 45px Poppins, sans-serif";
+                    ctx.fillText("PASSWORD WIFI", width/2, 120);
+                    
+                    // Password Text (Bold 800)
+                    ctx.font = "800 110px Poppins, sans-serif";
+                    ctx.fillText(p, width/2, 230);
 
-                // Draw QR Image
-                const xPos = (width - qrSize) / 2;
-                ctx.drawImage(qrImg, xPos, 380, qrSize, qrSize);
+                    // Draw QR Image
+                    const xPos = (width - qrSize) / 2;
+                    ctx.drawImage(source, xPos, 380, qrSize, qrSize);
 
-                // Download Trigger
-                const link = document.createElement('a');
-                link.href = canvas.toDataURL("image/png", 1.0);
-                link.download = `WIFI_ACCESS_RIZQI_${p}.png`;
-                link.click();
-            }, 250);
+                    // Download Trigger
+                    try {
+                        const link = document.createElement('a');
+                        link.href = canvas.toDataURL("image/png", 1.0);
+                        link.download = `WIFI_ACCESS_RIZQI_${p}.png`;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    } catch (err) {
+                        showToast('Gagal mengunduh, coba lagi.');
+                    }
+                }
+                
+                checkCount++;
+                if (checkCount > 20) { // Timeout setelah 2 detik
+                    clearInterval(checkReady);
+                    showToast('Gagal memproses QR Code.');
+                }
+            }, 100);
         }
 
         // UI Navigation
