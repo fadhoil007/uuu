@@ -141,9 +141,9 @@
 <body>
 
     <div class="glass-morphism rounded-3xl shadow-2xl p-6 sm:p-8 relative">
-        <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-2 text-center leading-tight tracking-tight">
+        <h1 class="text-xl sm:text-2xl font-bold text-gray-800 mb-2 text-center leading-tight tracking-tight uppercase">
             SRC RIZQI <br> Wifi Generator
-        </h2>
+        </h1>
         
         <div id="dateTimeDisplay" class="text-center font-bold text-gray-400 text-xs mb-3 w-full">
             Memuat waktu...
@@ -226,7 +226,7 @@
         <div id="historySection" class="w-full">
             <div class="flex items-center space-x-2 my-4">
                 <div class="h-[1px] flex-1 bg-gray-200"></div>
-                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Riwayat Terakhir</span>
+                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Pasword Sebelumnya</span>
                 <div class="h-[1px] flex-1 bg-gray-200"></div>
             </div>
             <div class="bg-gray-100 border border-gray-200 rounded-xl p-3 flex items-center justify-between shadow-inner">
@@ -238,10 +238,12 @@
         </div>
     </div>
 
+    <!-- Floating Action Button for Help -->
     <div class="fab" onclick="toggleTutorial()">
         <i class="fa-solid fa-question text-xl"></i>
     </div>
 
+    <!-- QR Modal -->
     <div id="qrModal" class="modal">
         <div id="qrCard" class="bg-white p-6 rounded-3xl max-w-[300px] w-full text-center relative mx-4 shadow-2xl qr-card-anim">
             <button onclick="closeModal('qrModal')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 active:scale-90">
@@ -258,6 +260,7 @@
         </div>
     </div>
 
+    <!-- Tutorial Modal -->
     <div id="tutorialModal" class="modal">
         <div id="tutorialCard" class="bg-white p-6 rounded-3xl max-w-[320px] w-full relative mx-4 shadow-2xl qr-card-anim">
             <button onclick="closeModal('tutorialModal')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 active:scale-90">
@@ -303,6 +306,7 @@
     </p>
 
     <script>
+        // Element Selectors
         const passwordDisplay = document.getElementById('passwordDisplay');
         const lengthSlider = document.getElementById('lengthSlider');
         const lengthValue = document.getElementById('lengthValue');
@@ -336,11 +340,19 @@
             symbols: '!@#$%^&*()_+-=[]{}|;:,.<>?'
         };
 
-        const quotes = ["Mimpi besar butuh kerja keras.", "Pastikan hari ini lebih baik.", "Wujudkan masa depan dengan aksi.", "Keberhasilan butuh doa.", "Pantang menyerah adalah kunci."];
+        const quotes = [
+            "Mimpi besar butuh kerja keras.", 
+            "Pastikan hari ini lebih baik.", 
+            "Wujudkan masa depan dengan aksi.", 
+            "Keberhasilan butuh doa.", 
+            "Pantang menyerah adalah kunci."
+        ];
+        
         let quoteIndex = 0;
         let hasGenerated = false;
         let previousPassword = "";
 
+        // UI Helpers
         function cycleQuotes() {
             quoteDisplay.classList.add('fade-out');
             setTimeout(() => {
@@ -362,6 +374,7 @@
 
         lengthSlider.addEventListener('input', () => lengthValue.textContent = lengthSlider.value);
 
+        // Core Logic: Password Generation
         function generatePassword() {
             if (hasGenerated && passwordDisplay.value !== "Klik Buat Password") {
                 previousPassword = passwordDisplay.value;
@@ -396,6 +409,7 @@
                 }
             });
 
+            // Shuffle array
             for (let i = passwordChars.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [passwordChars[i], passwordChars[j]] = [passwordChars[j], passwordChars[i]];
@@ -438,6 +452,7 @@
             showToast('Berhasil disalin!');
         }
 
+        // QR Code & Download Logic
         function showQRCode(p) {
             if (p === "Klik Buat Password") {
                 showToast('Klik Buat Password Terlebih Dahulu!');
@@ -452,6 +467,8 @@
             });
             modalCopyBtn.onclick = () => copyToClipboard(p);
             modalDownloadBtn.onclick = () => downloadHighResQR(p);
+            
+            // Animation reset
             qrCard.classList.remove('qr-card-anim');
             void qrCard.offsetWidth; 
             qrCard.classList.add('qr-card-anim');
@@ -461,13 +478,14 @@
         function downloadHighResQR(p) {
             const width = 1200;
             const height = 1500;
-            const qrSize = 950; // Ukuran QR menyeimbangkan lebar teks
+            const qrSize = 950; 
             
             const canvas = document.createElement('canvas');
             canvas.width = width;
             canvas.height = height;
             const ctx = canvas.getContext('2d');
 
+            // Draw Background
             ctx.fillStyle = "#ffffff";
             ctx.fillRect(0, 0, width, height);
 
@@ -487,19 +505,19 @@
                 ctx.fillStyle = "#000000";
                 ctx.textAlign = "center";
                 
-                // Label Atas
+                // Header
                 ctx.font = "bold 45px Poppins, sans-serif";
                 ctx.fillText("PASSWORD WIFI", width/2, 120);
                 
-                // Isi Password (Dibuat jauh lebih tebal dan besar)
+                // Password Text (Bold 800)
                 ctx.font = "800 110px Poppins, sans-serif";
                 ctx.fillText(p, width/2, 230);
 
-                // Gambar QR Code (Tengah-Bawah)
-                // Menghitung posisi agar simetris
+                // Draw QR Image
                 const xPos = (width - qrSize) / 2;
                 ctx.drawImage(qrImg, xPos, 380, qrSize, qrSize);
 
+                // Download Trigger
                 const link = document.createElement('a');
                 link.href = canvas.toDataURL("image/png", 1.0);
                 link.download = `WIFI_ACCESS_RIZQI_${p}.png`;
@@ -507,6 +525,7 @@
             }, 250);
         }
 
+        // UI Navigation
         function toggleTutorial() {
             tutorialCard.classList.remove('qr-card-anim');
             void tutorialCard.offsetWidth; 
@@ -522,11 +541,9 @@
             setTimeout(() => toast.style.opacity = '0', 2500);
         }
 
+        // Global Event Listeners
         window.onclick = (e) => { if (e.target.classList.contains('modal')) e.target.classList.remove('active'); }
         generateBtn.addEventListener('click', generatePassword);
     </script>
 </body>
 </html>
-
-
-
