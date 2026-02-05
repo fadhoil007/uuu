@@ -106,10 +106,11 @@
             margin-top: 1.25rem;
         }
 
+        /* Lingkaran slider tetap pada ukuran kecil sesuai permintaan sebelumnya */
         input[type=range]::-webkit-slider-thumb {
-            height: 20px; width: 20px; border-radius: 50%;
+            height: 15px; width: 15px; border-radius: 50%;
             background: #4f46e5; cursor: pointer; -webkit-appearance: none;
-            margin-top: -8px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
 
         .fab {
@@ -168,7 +169,7 @@
                 </div>
             </div>
 
-            <!-- Bagian ini dikembalikan isinya -->
+            <!-- Konten Catatan Informasi -->
             <div id="instructionNote" class="text-center bg-yellow-50 border border-yellow-200 rounded-xl p-3 shadow-inner">
                 <p class="text-[11px] text-yellow-800 leading-tight font-bold">
                     <i class="fa-solid fa-circle-info mr-1"></i>
@@ -238,7 +239,7 @@
         </div>
     </div>
 
-    <!-- FAB Button -->
+    <!-- Tombol Bantuan -->
     <div class="fab" onclick="toggleTutorial()">
         <i class="fa-solid fa-question text-xl"></i>
     </div>
@@ -260,7 +261,7 @@
         </div>
     </div>
 
-    <!-- Modal Tutorial - Isinya dikembalikan seperti semula -->
+    <!-- Modal Tutorial -->
     <div id="tutorialModal" class="modal">
         <div id="tutorialCard" class="bg-white p-6 rounded-3xl max-w-[320px] w-full relative mx-4 shadow-2xl qr-card-anim">
             <button onclick="closeModal('tutorialModal')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 active:scale-90">
@@ -295,6 +296,9 @@
         </div>
     </div>
 
+    <!-- Hidden Container untuk Render High-Res -->
+    <div id="hiddenQRContainer" style="display:none;"></div>
+
     <footer class="mt-4 mb-6 text-white/90 text-[10px] font-bold tracking-[0.2em] flex items-center gap-1 justify-center">
         made with <i class="fa-solid fa-heart text-pink-400 animate-pulse"></i> by rizqi
     </footer>
@@ -321,6 +325,7 @@
         const qrCard = document.getElementById('qrCard');
         const tutorialCard = document.getElementById('tutorialCard');
         const qrcodeContainer = document.getElementById('qrcode');
+        const hiddenQRContainer = document.getElementById('hiddenQRContainer');
         const instructionNote = document.getElementById('instructionNote');
         const quoteDisplay = document.getElementById('quoteDisplay');
         const historySection = document.getElementById('historySection');
@@ -363,7 +368,7 @@
         lengthSlider.addEventListener('input', () => lengthValue.textContent = lengthSlider.value);
 
         function generatePassword() {
-            if (hasGenerated && passwordDisplay.value !== "KLIK BUAT PASSWORD") {
+            if (hasGenerated && passwordDisplay.value !== "Klik Buat Password") {
                 previousPassword = passwordDisplay.value;
                 historyText.textContent = previousPassword;
                 historySection.classList.add('show');
@@ -439,8 +444,9 @@
         }
 
         function showQRCode(p) {
-            if (p === "KLIK BUAT PASSWORD") return;
+            if (p === "Klik Buat Password") return;
             qrcodeContainer.innerHTML = '';
+            // Render standar untuk display modal (tetap 200px)
             new QRCode(qrcodeContainer, {
                 text: `WIFI:T:WPA;S:SRC RIZQI;P:${p};;`,
                 width: 200, height: 200,
@@ -463,12 +469,38 @@
         }
 
         function downloadQR(p) {
-            const qrCanvas = qrcodeContainer.querySelector('canvas');
-            if (!qrCanvas) return;
-            const link = document.createElement('a');
-            link.href = qrCanvas.toDataURL("image/png");
-            link.download = `QR_WIFI_SRCRIZQI.png`;
-            link.click();
+            // Kita buat render baru dengan resolusi tinggi (1000x1000 pixel) secara background
+            hiddenQRContainer.innerHTML = '';
+            const highResSize = 1000;
+            
+            new QRCode(hiddenQRContainer, {
+                text: `WIFI:T:WPA;S:SRC RIZQI;P:${p};;`,
+                width: highResSize,
+                height: highResSize,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+
+            // Tunggu sebentar sampai canvas selesai di-render
+            setTimeout(() => {
+                const qrCanvas = hiddenQRContainer.querySelector('canvas');
+                if (!qrCanvas) {
+                    // Fallback jika library sedang memproses img sebagai pengganti canvas
+                    const qrImg = hiddenQRContainer.querySelector('img');
+                    if (qrImg) {
+                        const link = document.createElement('a');
+                        link.href = qrImg.src;
+                        link.download = `QR_WIFI_SRCRIZQI_HIGH_RES.png`;
+                        link.click();
+                    }
+                    return;
+                }
+                const link = document.createElement('a');
+                link.href = qrCanvas.toDataURL("image/png", 1.0); // Kualitas 100%
+                link.download = `QR_WIFI_SRCRIZQI_HIGH_RES.png`;
+                link.click();
+            }, 100);
         }
 
         function closeModal(modalId) { document.getElementById(modalId).classList.remove('active'); }
